@@ -1,19 +1,30 @@
 {
   "expo": {
-    "name": "Peeky",
-    "slug": "Peeky",
+    "name": "Peeky - Eğitici Oyunlar",
+    "slug": "peeky-educational-games",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "runtimeVersion": "1.0.0",
+    "updates": {
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD_FALLBACK",
+      "fallbackToCacheTimeout": 1000
+    },
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.peeky.educationalgames",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSLocalNetworkUsageDescription": "This app needs access to your local network",
+        "NSBonjourServiceTypes": ["_app-clips._tcp"]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,10 +32,24 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.peeky.educationalgames",
+      "versionCode": "1",
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.CAMERA",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [],
+    "extra": {
+      "eas": {
+        "projectId": "peeky-educational-games"
+      }
     }
   }
 }
