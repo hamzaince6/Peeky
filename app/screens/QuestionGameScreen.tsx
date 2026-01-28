@@ -13,78 +13,152 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { useTheme } from '../utils/themeContext';
+import { useAuth } from '../utils/authContext';
+import { aiService, Question } from '../services/aiService';
+import { getCategoriesByIds, getCategoryById } from '../utils/categories';
 import { StatusBar } from 'expo-status-bar';
 
 const { width } = Dimensions.get('window');
 
 type Props = NativeStackScreenProps<RootStackParamList, 'QuestionGame'>;
 
-interface Question {
-  text: string;
-  options: string[];
-  correct: number;
-}
-
-const SAMPLE_QUESTIONS: Question[] = [
-  {
-    text: "Dünya'nın en büyük hayvanı hangisidir?",
-    options: ['Aslan', 'Mavi Balina', 'Fil', 'Zürafa'],
-    correct: 1,
-  },
-  {
-    text: 'Hangi gezegen "Kızıl Gezegen" olarak bilinir?',
-    options: ['Venüs', 'Mars', 'Jüpiter', 'Satürn'],
-    correct: 1,
-  },
-  {
-    text: 'Bir haftada kaç gün vardır?',
-    options: ['5', '6', '7', '8'],
-    correct: 2,
-  },
-  {
-    text: 'Güneş bir nedir?',
-    options: ['Gezegen', 'Uydu', 'Yıldız', 'Kuyruklu Yıldız'],
-    correct: 2,
-  },
-];
+const QUESTIONS_PER_GAME = 10;
 
 const QuestionGameScreen = ({ navigation, route }: Props) => {
   const { theme } = useTheme();
+  const { profile, ageGroup } = useAuth();
+  
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
-  const [showResult, setShowResult] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [gameEnded, setGameEnded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const transitionAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
 
-  const question = SAMPLE_QUESTIONS[currentQuestion];
-
+  // Load questions on mount
   useEffect(() => {
-    // Initial progress bar animation
-    updateProgress();
-  }, [currentQuestion]);
+    loadQuestions();
+  }, []);
+
+  // Update progress when question changes
+  useEffect(() => {
+    if (questions.length > 0) {
+      updateProgress();
+    }
+  }, [currentQuestion, questions.length]);
+
+  const loadQuestions = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const userAgeGroup = ageGroup || route.params?.ageGroup || 'G3';
+      const userCategories = profile?.preferred_categories || [];
+
+      // Load questions from user's selected categories
+      const loadedQuestions = await aiService.getQuestionsWithFallback(
+        userAgeGroup,
+        QUESTIONS_PER_GAME,
+        undefined, // single category
+        userCategories.length > 0 ? userCategories : undefined // multiple categories
+      );
+
+      if (loadedQuestions.length === 0) {
+        setError('Soru yüklenemedi. Lütfen tekrar deneyin.');
+        return;
+      }
+
+      setQuestions(loadedQuestions);
+    } catch (err) {
+      console.error('Load questions error:', err);
+      setError('Sorular yüklenirken bir hata oluştu. Lütfen tekrar deneyin.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const updateProgress = () => {
+    if (questions.length === 0) return;
     Animated.timing(progressAnim, {
-      toValue: (currentQuestion + 1) / SAMPLE_QUESTIONS.length,
+      toValue: (currentQuestion + 1) / questions.length,
       duration: 500,
       useNativeDriver: false,
     }).start();
   };
 
+  const getCurrentCategoryName = () => {
+    if (questions.length === 0 || currentQuestion >= questions.length) return 'GENEL';
+    const question = questions[currentQuestion];
+    const topic = question.topic;
+    
+    const topicToCategory: Record<string, string> = {
+      'math': 'MATEMATİK',
+      'science': 'FEN BİLİMLERİ',
+      'reading': 'TÜRKÇE',
+      'history': 'TARİH',
+      'geography': 'COĞRAFYA',
+      'general_knowledge': 'GENEL KÜLTÜR',
+    };
+    
+    return topicToCategory[topic || ''] || 'GENEL KÜLTÜR';
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <StatusBar style="dark" />
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={[styles.loadingText, { color: theme.colors.text }]}>
+              Sorular hazırlanıyor... 🎯
+            </Text>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  if (error || questions.length === 0) {
+    return (
+      <View style={styles.container}>
+        <StatusBar style="dark" />
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorTitle}>⚠️</Text>
+            <Text style={styles.errorText}>{error || 'Soru yüklenemedi'}</Text>
+            <TouchableOpacity
+              style={[styles.retryButton, { backgroundColor: theme.colors.primary }]}
+              onPress={loadQuestions}
+            >
+              <Text style={styles.retryButtonText}>Tekrar Dene</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+              <Text style={styles.backButtonText}>Ana Sayfaya Dön</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  const question = questions[currentQuestion];
+
   const handleAnswerSelect = (index: number) => {
     if (selectedAnswer !== null) return;
 
     setSelectedAnswer(index);
-    if (index === question.correct) {
+    const isCorrect = index === question.correct_index;
+    if (isCorrect) {
       setScore(score + 1);
     }
 
     setTimeout(() => {
-      if (currentQuestion < SAMPLE_QUESTIONS.length - 1) {
+      if (currentQuestion < questions.length - 1) {
         animateNextQuestion();
       } else {
         setGameEnded(true);
@@ -109,11 +183,13 @@ const QuestionGameScreen = ({ navigation, route }: Props) => {
     });
   };
 
-  const handleRestart = () => {
+  const handleRestart = async () => {
     setCurrentQuestion(0);
     setScore(0);
     setSelectedAnswer(null);
     setGameEnded(false);
+    // Load new questions for replay
+    await loadQuestions();
   };
 
   const handleBack = () => {
@@ -121,7 +197,7 @@ const QuestionGameScreen = ({ navigation, route }: Props) => {
   };
 
   if (gameEnded) {
-    const percentage = Math.round((score / SAMPLE_QUESTIONS.length) * 100);
+    const percentage = Math.round((score / questions.length) * 100);
     return (
       <View style={styles.container}>
         <StatusBar style="dark" />
@@ -129,8 +205,9 @@ const QuestionGameScreen = ({ navigation, route }: Props) => {
           <View style={styles.resultContainer}>
             <Text style={styles.resultTitle}>{percentage >= 70 ? 'Harikasın! 🥳' : 'İyi İş Çıkardın! 👏'}</Text>
             <View style={[styles.scoreCard, { backgroundColor: theme.colors.primary + '15' }]}>
-              <Text style={[styles.finalScore, { color: theme.colors.primary }]}>{score} / {SAMPLE_QUESTIONS.length}</Text>
+              <Text style={[styles.finalScore, { color: theme.colors.primary }]}>{score} / {questions.length}</Text>
               <Text style={styles.finalSub}>Doğru Cevap</Text>
+              <Text style={styles.percentageText}>%{percentage} Başarı</Text>
             </View>
             <View style={styles.resultFooter}>
               <TouchableOpacity style={[styles.mainButton, { backgroundColor: '#0F172A' }]} onPress={handleRestart}>
@@ -170,7 +247,7 @@ const QuestionGameScreen = ({ navigation, route }: Props) => {
                 ]}
               />
             </View>
-            <Text style={styles.progressLabel}>{currentQuestion + 1} / {SAMPLE_QUESTIONS.length}</Text>
+            <Text style={styles.progressLabel}>{currentQuestion + 1} / {questions.length}</Text>
           </View>
           <View style={styles.scoreBadge}>
             <Text style={styles.scoreBadgeText}>⭐ {score}</Text>
@@ -180,7 +257,7 @@ const QuestionGameScreen = ({ navigation, route }: Props) => {
         <Animated.View style={[styles.mainContent, { opacity: fadeAnim }]}>
           {/* Question Card */}
           <View style={styles.questionCard}>
-            <Text style={styles.questionType}>GENEL KÜLTÜR</Text>
+            <Text style={styles.questionType}>{getCurrentCategoryName()}</Text>
             <Text style={styles.questionText}>{question.text}</Text>
           </View>
 
@@ -188,7 +265,7 @@ const QuestionGameScreen = ({ navigation, route }: Props) => {
           <View style={styles.optionsList}>
             {question.options.map((option, index) => {
               const isSelected = selectedAnswer === index;
-              const isCorrect = index === question.correct;
+              const isCorrect = index === question.correct_index;
               const showCorrect = selectedAnswer !== null && isCorrect;
               const showWrong = isSelected && !isCorrect;
 
@@ -425,6 +502,66 @@ const styles = StyleSheet.create({
     color: '#64748B',
     fontWeight: '700',
     marginTop: 5,
+  },
+  percentageText: {
+    fontSize: 24,
+    color: '#64748B',
+    fontWeight: '800',
+    marginTop: 10,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 20,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  errorTitle: {
+    fontSize: 64,
+    marginBottom: 20,
+  },
+  errorText: {
+    fontSize: 18,
+    color: '#64748B',
+    textAlign: 'center',
+    marginBottom: 30,
+    fontWeight: '600',
+  },
+  retryButton: {
+    height: 60,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+    marginBottom: 15,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  backButton: {
+    height: 60,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+  },
+  backButtonText: {
+    color: '#64748B',
+    fontSize: 16,
+    fontWeight: '700',
   },
   resultFooter: {
     width: '100%',

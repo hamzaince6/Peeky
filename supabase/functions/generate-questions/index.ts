@@ -7,6 +7,16 @@ const geminiApiKey = Deno.env.get('GEMINI_API_KEY')!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
+// Category mapping: Turkish category IDs to English topic names for Gemini
+const CATEGORY_TO_TOPIC: Record<string, string> = {
+  'matematik': 'math',
+  'fen': 'science',
+  'turkce': 'reading',
+  'tarih': 'history',
+  'cografya': 'geography',
+  'genel-kultur': 'general_knowledge',
+};
+
 // Allowed topics per age group
 const ALLOWED_TOPICS: Record<string, string[]> = {
   G1: [
@@ -35,6 +45,7 @@ const ALLOWED_TOPICS: Record<string, string[]> = {
     'history',
     'nature',
     'animals',
+    'general_knowledge',
   ],
   G4: [
     'math',
@@ -44,6 +55,7 @@ const ALLOWED_TOPICS: Record<string, string[]> = {
     'reading',
     'technology',
     'sports',
+    'general_knowledge',
   ],
   G5: [
     'science',
@@ -53,6 +65,7 @@ const ALLOWED_TOPICS: Record<string, string[]> = {
     'math',
     'technology',
     'social_studies',
+    'general_knowledge',
   ],
 };
 
@@ -69,20 +82,48 @@ interface GenerateQuestionsRequest {
   age_group: string;
   count?: number;
   topic?: string;
+  category?: string; // Turkish category ID (matematik, fen, etc.)
+  categories?: string[]; // Multiple categories
 }
 
 async function generateQuestionsWithGemini(
   ageGroup: string,
   count: number = 5,
-  topic?: string
+  topic?: string,
+  category?: string
 ) {
   const difficulty = DIFFICULTY_LEVELS[ageGroup] || "medium";
   const allowedTopics = ALLOWED_TOPICS[ageGroup] || ["general"];
-  const selectedTopic = topic && allowedTopics.includes(topic) ? topic : allowedTopics[0];
+  
+  // Map Turkish category to English topic
+  let selectedTopic = topic;
+  if (category && CATEGORY_TO_TOPIC[category]) {
+    const mappedTopic = CATEGORY_TO_TOPIC[category];
+    if (allowedTopics.includes(mappedTopic)) {
+      selectedTopic = mappedTopic;
+    }
+  }
+  
+  // Fallback to first allowed topic if not valid
+  if (!selectedTopic || !allowedTopics.includes(selectedTopic)) {
+    selectedTopic = allowedTopics[0];
+  }
+
+  // Get Turkish category name for prompt
+  const categoryNames: Record<string, string> = {
+    'math': 'Matematik',
+    'science': 'Fen Bilimleri',
+    'reading': 'Türkçe',
+    'history': 'Tarih',
+    'geography': 'Coğrafya',
+    'general_knowledge': 'Genel Kültür',
+  };
+  const categoryName = categoryNames[selectedTopic] || selectedTopic;
 
   const prompt = `
 Generate exactly ${count} educational multiple-choice questions in Turkish for age group ${ageGroup} (ages 0-15).
 
+Category: ${categoryName}
 Topic: ${selectedTopic}
 Difficulty: ${difficulty}
 Language: Turkish (Türkçe)
@@ -175,11 +216,37 @@ Generate the questions now:
   return questions;
 }
 
+// CORS headers helper
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
 serve(async (req: Request) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders,
+    });
+  }
+
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Verify authorization header (anon key or service role key)
+  const authHeader = req.headers.get('authorization');
+  const apikeyHeader = req.headers.get('apikey');
+  
+  if (!authHeader && !apikeyHeader) {
+    return new Response(JSON.stringify({ error: 'Missing authorization header' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 
@@ -191,7 +258,7 @@ serve(async (req: Request) => {
     if (!['G1', 'G2', 'G3', 'G4', 'G5'].includes(age_group)) {
       return new Response(JSON.stringify({ error: 'Invalid age group' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
@@ -199,7 +266,8 @@ serve(async (req: Request) => {
     const questions = await generateQuestionsWithGemini(
       age_group,
       Math.min(count, 10), // Max 10 per request
-      topic
+      topic,
+      body.category // Pass category for mapping
     );
 
     // Cache questions in database
@@ -213,14 +281,14 @@ serve(async (req: Request) => {
 
     return new Response(JSON.stringify({ success: true, questions }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });

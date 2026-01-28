@@ -43,7 +43,15 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "name": "Peeky - Eğitici Oyunlar",
+      "shortName": "Peeky",
+      "lang": "tr",
+      "scope": "/",
+      "themeColor": "#7000FF",
+      "backgroundColor": "#FFFFFF",
+      "display": "standalone",
+      "orientation": "portrait"
     },
     "plugins": [],
     "extra": {
