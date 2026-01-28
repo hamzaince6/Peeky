@@ -1,14 +1,22 @@
-import Constants from 'expo-constants';
-import { supabase } from './supabaseService';
+// Local question service backed by static JSON data
+// ve opsiyonel olarak Gemini API üzerinden dinamik üretim.
 
-export interface GenerateQuestionsRequest {
-  age_group: string;
-  count?: number;
-  topic?: string;
-  category?: string; // Turkish category ID (matematik, fen, etc.)
-  categories?: string[]; // Multiple categories for mixed questions
-}
+// KEEP:
+// - Questions are loaded from the local `datas/questions.json` file.
+// - You can freely edit that JSON to change/add questions without touching the code.
+// - Ek olarak, `generateQuestionsWithGemini` fonksiyonu ile client-side Gemini isteği atılabilir.
 
+// NOTE: Gemini çağrısı tamamen client-side yapılır.
+// API anahtarını `.env` dosyasında EXPO_PUBLIC_GEMINI_API_KEY olarak tanımlaman gerekir.
+
+import { buildQuestionsPrompt } from '../../prompts/questions';
+
+const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || '';
+// Model name can be overridden at runtime via `.env`
+// Example: EXPO_PUBLIC_GEMINI_MODEL=gemini-2.5-flash
+const GEMINI_MODEL = process.env.EXPO_PUBLIC_GEMINI_MODEL || 'gemini-2.5-flash';
+
+// Keep the Question shape as-is so existing screens keep working.
 export interface Question {
   text: string;
   options: string[];
@@ -16,158 +24,50 @@ export interface Question {
   topic?: string;
 }
 
-export interface GenerateQuestionsResponse {
-  success: boolean;
-  questions: Question[];
-  error?: string;
-}
+// The JSON file is expected to be shaped roughly as:
+// {
+//   "G1": [{ "id": "q1", "text": "...", "options": [...], "correct_index": 0, "topic": "math" }],
+//   "G2": [...],
+//   ...
+// }
+//
+// NOTE: Local JSON keys are legacy (e.g. "G3") and the app may use newer ageGroup ids.
+// We handle missing keys by falling back to available local data.
+// Each entry under an age group should at least have: text, options, correct_index.
+// `topic` is optional but recommended for category filtering.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const questionsData: Record<string, Question[]> = require('../../datas/questions.json');
 
-// Get Supabase URL and anon key for manual requests
-const getSupabaseConfig = () => {
-  const url = process.env.EXPO_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '';
-  const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
-  return { url, anonKey };
+const CATEGORY_TOPIC_MAP: Record<string, string> = {
+  'matematik': 'math',
+  'fen': 'science',
+  'turkce': 'reading',
+  'tarih': 'history',
+  'cografya': 'geography',
+  'genel-kultur': 'general_knowledge',
+};
+
+const shuffleArray = <T,>(arr: T[]): T[] => {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+};
+
+const pickRandom = <T,>(arr: T[], count: number): T[] => {
+  if (arr.length <= count) return [...arr];
+  return shuffleArray(arr).slice(0, count);
 };
 
 export const aiService = {
   /**
-   * Generate dynamic questions using Gemini AI via Supabase Edge Function
-   */
-  async generateQuestions(
-    request: GenerateQuestionsRequest
-  ): Promise<Question[]> {
-    try {
-      // Try using Supabase client first (works better on native)
-      try {
-        const { data, error } = await supabase.functions.invoke(
-          'generate-questions',
-          {
-            body: request,
-          }
-        );
-
-        if (error) {
-          throw error;
-        }
-
-        if (!data || !data.success) {
-          throw new Error(data?.error || 'Failed to generate questions');
-        }
-
-        return data.questions || [];
-      } catch (clientError) {
-        // Fallback to manual fetch for web compatibility
-        console.log('Supabase client invoke failed, trying manual fetch...', clientError);
-        
-        const { url, anonKey } = getSupabaseConfig();
-        if (!url || !anonKey) {
-          throw new Error('Supabase configuration missing');
-        }
-
-        const response = await fetch(`${url}/functions/v1/generate-questions`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${anonKey}`,
-            'apikey': anonKey,
-          },
-          body: JSON.stringify(request),
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`HTTP ${response.status}: ${errorText}`);
-        }
-
-        const data = await response.json();
-
-        if (!data.success) {
-          throw new Error(data.error || 'Failed to generate questions');
-        }
-
-        return data.questions || [];
-      }
-    } catch (error) {
-      console.error('Generate questions error:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Get cached questions for an age group, optionally filtered by category
-   */
-  async getCachedQuestions(
-    ageGroup: string,
-    limit: number = 5,
-    category?: string
-  ) {
-    try {
-      let query = supabase
-        .from('ai_questions_cache')
-        .select('question')
-        .eq('age_group', ageGroup);
-
-      // Filter by category if provided (check topic field in question JSON)
-      if (category) {
-        // Note: This is a simple filter. For better performance, consider adding a category column
-        // For now, we'll get all questions and filter client-side
-      }
-
-      const { data, error } = await query
-        .order('used_count', { ascending: true })
-        .limit(limit * 2); // Get more to filter by category
-
-      if (error) throw error;
-
-      let questions = data?.map((item) => item.question) || [];
-
-      // Filter by category if provided
-      if (category && questions.length > 0) {
-        const categoryMap: Record<string, string> = {
-          'matematik': 'math',
-          'fen': 'science',
-          'turkce': 'reading',
-          'tarih': 'history',
-          'cografya': 'geography',
-          'genel-kultur': 'general_knowledge',
-        };
-        const topicFilter = categoryMap[category];
-        if (topicFilter) {
-          questions = questions.filter(
-            (q: any) => q.topic === topicFilter || q.topic === category
-          );
-        }
-      }
-
-      return questions.slice(0, limit);
-    } catch (error) {
-      console.error('Get cached questions error:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Mark questions as used to track usage
-   */
-  async markQuestionsAsUsed(questionIds: string[]) {
-    try {
-      const { error } = await supabase
-        .from('ai_questions_cache')
-        .update({ used_count: supabase.rpc('increment_used_count') })
-        .in('id', questionIds);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Mark questions as used error:', error);
-      // Don't throw - this is not critical
-    }
-  },
-
-  /**
-   * Fetch questions with fallback strategy:
-   * 1. Try to get cached questions first
-   * 2. If not enough, generate new ones with AI
-   * Supports category filtering
+   * Ana giriş noktası: yaş grubuna ve isteğe bağlı kategori(ler)e göre
+   * soruları Gemini API'den dinamik olarak üretir.
+   *
+   * - categories: birden fazla kategori id'si (matematik, fen, ...)
+   * - category: tek kategori id'si
    */
   async getQuestionsWithFallback(
     ageGroup: string,
@@ -175,46 +75,178 @@ export const aiService = {
     category?: string,
     categories?: string[]
   ): Promise<Question[]> {
-    try {
-      // If multiple categories, mix questions from each
-      if (categories && categories.length > 0) {
-        const questionsPerCategory = Math.ceil(count / categories.length);
-        const allQuestions: Question[] = [];
+    // Gemini'den soru üret
+    const prompt = buildQuestionsPrompt({
+      ageGroup,
+      count,
+      category,
+      categories,
+    });
+    const geminiQuestions = await this.generateQuestionsWithGemini(prompt);
 
-        for (const cat of categories) {
-          const catQuestions = await this.getQuestionsWithFallback(
-            ageGroup,
-            questionsPerCategory,
-            cat
-          );
-          allQuestions.push(...catQuestions);
-        }
+    if (geminiQuestions.length > 0) {
+      return geminiQuestions.slice(0, count);
+    }
 
-        // Shuffle and return requested count
-        const shuffled = allQuestions.sort(() => Math.random() - 0.5);
-        return shuffled.slice(0, count);
+    // Fallback: Local JSON'dan soru al
+    if (categories && categories.length > 0) {
+      const perCategory = Math.max(1, Math.ceil(count / categories.length));
+      const all: Question[] = [];
+
+      for (const cat of categories) {
+        const subset = this.getQuestionsFromLocal(ageGroup, perCategory, cat);
+        all.push(...subset);
       }
 
-      // Single category or no category
-      // Try cached first
-      const cached = await this.getCachedQuestions(ageGroup, count, category);
+      return shuffleArray(all).slice(0, count);
+    }
 
-      if (cached.length >= count) {
-        return cached.slice(0, count);
-      }
+    return this.getQuestionsFromLocal(ageGroup, count, category);
+  },
 
-      // Generate new ones if not enough cached
-      const needed = count - cached.length;
-      const generated = await this.generateQuestions({
-        age_group: ageGroup,
-        count: needed,
-        category,
+  /**
+   * Local JSON'dan filtreleyerek soru seçer.
+   */
+  getQuestionsFromLocal(
+    ageGroup: string,
+    count: number,
+    category?: string
+  ): Question[] {
+    // Local dataset may not have entries for every ageGroup id.
+    // Prefer exact key, otherwise fallback to a reasonable default.
+    const allForAge =
+      questionsData[ageGroup] ||
+      // Legacy keys / minimal dataset fallback
+      questionsData['G3'] ||
+      [];
+    if (allForAge.length === 0) {
+      console.warn(`No questions found in local data for age group: ${ageGroup}`);
+      return [];
+    }
+
+    let filtered = [...allForAge];
+
+    if (category) {
+      const topicFilter = CATEGORY_TOPIC_MAP[category] || category;
+      filtered = filtered.filter((q) => {
+        if (!q.topic) return true; // topic tanımlı değilse genel soru kabul et
+        return q.topic === topicFilter || q.topic === category;
       });
+    }
 
-      return [...cached, ...generated].slice(0, count);
+    if (filtered.length === 0) {
+      console.warn(
+        `No questions found for age group ${ageGroup} with category ${category}. Falling back to all questions for that age group.`
+      );
+      filtered = allForAge;
+    }
+
+    return pickRandom(filtered, count);
+  },
+
+  /**
+   * Client-side Gemini API ile soru üretimi.
+   *
+   * Bu fonksiyon, verilen prompt'a göre modelden JSON formatında
+   * Question[] bekler ve parse etmeye çalışır.
+   *
+   * Örnek kullanım:
+   * const qs = await aiService.generateQuestionsWithGemini(
+   *   '8-10 yaş arası çocuklar için 5 adet matematik sorusu üret. ...'
+   * );
+   */
+  async generateQuestionsWithGemini(prompt: string): Promise<Question[]> {
+    if (!GEMINI_API_KEY) {
+      console.warn(
+        'EXPO_PUBLIC_GEMINI_API_KEY tanımlı değil, Gemini isteği atılamıyor. ' +
+          'Proje köküne `.env` ekleyip EXPO_PUBLIC_GEMINI_API_KEY=... yazmalısın.'
+      );
+      return [];
+    }
+
+    try {
+      const response = await fetch(
+        // v1beta supports newer Gemini model families more consistently
+        `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    text: `${prompt}
+
+Lütfen sadece aşağıdaki TypeScript tipine uyan, geçerli bir JSON array döndür:
+
+type Question = {
+  text: string;
+  options: string[];
+  correct_index: number;
+  topic?: string;
+};
+
+Yanıtın şu formatta olsun:
+[
+  {
+    "text": "...",
+    "options": ["A", "B", "C", "D"],
+    "correct_index": 0,
+    "topic": "math"
+  }
+]`,
+                  },
+                ],
+              },
+            ],
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Gemini HTTP error:', response.status, errorText);
+        return [];
+      }
+
+      const data: any = await response.json();
+
+      const text =
+        data?.candidates?.[0]?.content?.parts?.[0]?.text ??
+        data?.candidates?.[0]?.output_text ??
+        '';
+
+      if (!text) {
+        console.warn('Gemini yanıtı boş veya beklenmedik formatta:', data);
+        return [];
+      }
+
+      // Model genelde JSON'u metin içinde döner; sadece JSON kısmını parse etmeyi dene.
+      const jsonStart = text.indexOf('[');
+      const jsonEnd = text.lastIndexOf(']');
+      if (jsonStart === -1 || jsonEnd === -1) {
+        console.warn('Gemini yanıtında geçerli JSON array bulunamadı:', text);
+        return [];
+      }
+
+      const jsonSlice = text.slice(jsonStart, jsonEnd + 1);
+
+      const parsed = JSON.parse(jsonSlice) as Question[];
+
+      // Basit doğrulama
+      const cleaned = parsed.filter(
+        (q) =>
+          typeof q.text === 'string' &&
+          Array.isArray(q.options) &&
+          typeof q.correct_index === 'number'
+      );
+
+      return cleaned;
     } catch (error) {
-      console.error('Get questions with fallback error:', error);
-      // Return empty array on error - UI should handle gracefully
+      console.error('Gemini isteğinde hata:', error);
       return [];
     }
   },

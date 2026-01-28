@@ -14,21 +14,17 @@ import {
   Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/RootNavigator';
-import { useAuth } from '../utils/authContext';
-import { useTheme } from '../utils/themeContext';
-import { AGE_GROUPS, AgeGroup } from '../utils/ageGroups';
-import { CATEGORIES } from '../utils/categories';
+import { useAuth } from './utils/authContext';
+import { useTheme } from './utils/themeContext';
+import { AGE_GROUPS, AgeGroup } from './utils/ageGroups';
+import { CATEGORIES } from './utils/categories';
 import { StatusBar } from 'expo-status-bar';
 
 const { width } = Dimensions.get('window');
 const TOTAL_STEPS = 3;
 const STEP_COLORS = ['#7000FF', '#FF0080', '#FF9500'];
 
-type Props = NativeStackScreenProps<RootStackParamList, 'MultiStepOnboarding'>;
-
-const MultiStepOnboardingScreen = ({ navigation }: Props) => {
+const MultiStepOnboardingScreen = () => {
   const { selectAgeGroup } = useAuth();
   const { setAgeGroup } = useTheme();
 

@@ -11,13 +11,10 @@ import {
   Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/RootNavigator';
+import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
-const { width, height } = Dimensions.get('window');
-
-type Props = NativeStackScreenProps<RootStackParamList, 'Onboarding'>;
+const { width } = Dimensions.get('window');
 
 interface Slide {
   id: string;
@@ -32,21 +29,21 @@ const slides: Slide[] = [
     id: '1',
     title: 'Keşfetmeye Başla',
     description: 'Çocuğunuzun yaşına özel hazırlanmış dünyalarla tanışın.',
-    illustration: require('../../assets/peekylogo.png'),
+    illustration: require('../assets/peekylogo.png'),
     color: '#7000FF',
   },
   {
     id: '2',
     title: 'Birlikte Öğrenin',
     description: 'Eğitici oyunlar ve interaktif aktivitelerle gelişimi destekleyin.',
-    illustration: require('../../assets/peekylogo.png'),
+    illustration: require('../assets/peekylogo.png'),
     color: '#FF0080',
   },
   {
     id: '3',
     title: 'Gelişimi İzleyin',
     description: 'Başarıları takip edin ve beraber kutlayın!',
-    illustration: require('../../assets/peekylogo.png'),
+    illustration: require('../assets/peekylogo.png'),
     color: '#FF9500',
   },
 ];
@@ -143,7 +140,8 @@ const SlideItem = ({ item, isVisible }: { item: Slide; isVisible: boolean }) => 
   );
 };
 
-const OnboardingScreen = ({ navigation }: Props) => {
+const OnboardingScreen = () => {
+  const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
   const slidesRef = useRef<FlatList>(null);
@@ -160,12 +158,12 @@ const OnboardingScreen = ({ navigation }: Props) => {
     if (currentIndex < slides.length - 1) {
       slidesRef.current?.scrollToIndex({ index: currentIndex + 1 });
     } else {
-      navigation.navigate('MultiStepOnboarding');
+      router.push('/multi-step-onboarding');
     }
   };
 
   const handleSkip = () => {
-    navigation.navigate('MultiStepOnboarding');
+    router.push('/multi-step-onboarding');
   };
 
   return (

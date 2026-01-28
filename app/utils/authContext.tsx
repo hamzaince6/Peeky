@@ -6,18 +6,30 @@ import React, {
   ReactNode,
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { authService, userService, UserProfile } from '../services/supabaseService';
-import { AgeGroup } from '../utils/ageGroups';
+import { AgeGroup, normalizeAgeGroup } from './ageGroups';
+
+export interface LocalUserProfile {
+  id: string;
+  created_at: string;
+  age_group: string;
+  nickname: string;
+  age?: number;
+  parent_email?: string;
+  preferred_categories?: string[];
+  device_id?: string;
+}
 
 interface AuthContextType {
-  user: any | null;
-  profile: UserProfile | null;
+  user: null; // Supabase tamamen kaldırıldı, sadece local profil var
+  profile: LocalUserProfile | null;
   isLoading: boolean;
   ageGroup: AgeGroup | null;
   isOnboarded: boolean;
   deviceId: string | null;
   initializeSession: () => Promise<void>;
   selectAgeGroup: (ageGroup: AgeGroup, nickname: string, categories?: string[]) => Promise<void>;
+  updateAgeGroup: (ageGroup: AgeGroup) => Promise<void>;
+  updatePreferredCategories: (categories: string[]) => Promise<void>;
   updateParentEmail: (email: string) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -25,6 +37,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const DEVICE_ID_STORAGE_KEY = 'peeky_device_id';
+const PROFILE_STORAGE_KEY = 'peeky_profile';
 
 // Basit bir cihaz kimliği üretici (UUID benzeri)
 const generateDeviceId = () => {
@@ -34,11 +47,17 @@ const generateDeviceId = () => {
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<any | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [user] = useState<null>(null);
+  const [profile, setProfile] = useState<LocalUserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isOnboarded, setIsOnboarded] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
+
+  const persistProfile = async (nextProfile: LocalUserProfile) => {
+    await AsyncStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(nextProfile));
+    setProfile(nextProfile);
+    setIsOnboarded(true);
+  };
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -65,54 +84,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const initializeSession = async () => {
     try {
       setIsLoading(true);
-      
-      // First, try to load profile by device_id if available
-      if (deviceId) {
-        try {
-          const deviceProfile = await userService.getProfileByDeviceId(deviceId);
-          if (deviceProfile) {
-            setProfile(deviceProfile);
-            setIsOnboarded(true);
-            setIsLoading(false);
-            return; // Device profile found, we're done
-          }
-        } catch (error) {
-          console.warn('Failed to load profile by device ID:', error);
-        }
-      }
 
-      // Check if user already exists (Supabase auth)
-      const currentUser = await authService.getCurrentUser();
-
-      if (currentUser) {
-        setUser(currentUser);
-        // Try to fetch profile
+      // Cihaz kimliğine göre daha önce kaydedilmiş local profili yüklemeyi dene
+      const storedProfileJson = await AsyncStorage.getItem(PROFILE_STORAGE_KEY);
+      if (storedProfileJson) {
         try {
-          const userProfile = await userService.getProfile(currentUser.id);
-          setProfile(userProfile);
+          const storedProfile: LocalUserProfile = JSON.parse(storedProfileJson);
+          setProfile(storedProfile);
           setIsOnboarded(true);
+          return;
         } catch (error) {
-          // Profile doesn't exist yet - user needs to select age group
-          setIsOnboarded(false);
-        }
-      } else {
-        // No session exists, try to create anonymous session
-        // If anonymous sign-in is disabled, continue without user
-        try {
-          const { user: anonUser } = await authService.signUpAnonymous();
-          setUser(anonUser);
-          setIsOnboarded(false);
-        } catch (error: any) {
-          // Anonymous sign-in disabled or other error - continue without user
-          console.warn('Anonymous sign-in not available:', error?.message || 'Unknown error');
-          // App can work without authentication for demo/testing
-          setUser(null);
-          setIsOnboarded(false);
+          console.warn('Stored profile parse error, clearing invalid data', error);
+          await AsyncStorage.removeItem(PROFILE_STORAGE_KEY);
         }
       }
+
+      // Profil yoksa kullanıcı onboarding akışına gidecek
+      setIsOnboarded(false);
     } catch (error) {
       console.error('Session initialization error:', error);
-      // Don't block app - allow user to continue
       setIsOnboarded(false);
     } finally {
       setIsLoading(false);
@@ -121,69 +111,61 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const selectAgeGroup = async (ageGroup: AgeGroup, nickname: string, categories?: string[]) => {
     try {
-      let savedProfile: UserProfile | null = null;
+      const profileToSave: LocalUserProfile = {
+        id: deviceId || 'local-user',
+        created_at: new Date().toISOString(),
+        age_group: ageGroup,
+        nickname: nickname,
+        device_id: deviceId || undefined,
+        preferred_categories: categories || [],
+      };
 
-      // If user exists, create profile in database with device_id
-      if (user && deviceId) {
-        try {
-          const userProfile = await userService.createProfile(
-            user.id,
-            ageGroup,
-            nickname,
-            deviceId,
-            categories,
-          );
-          savedProfile = userProfile;
-        } catch (error) {
-          console.warn('Failed to create profile in database:', error);
-        }
-      }
-
-      // If no user but deviceId exists, create profile by device_id
-      if (!savedProfile && deviceId) {
-        try {
-          const deviceProfile = await userService.createProfileByDeviceId(
-            deviceId,
-            ageGroup,
-            nickname,
-            categories,
-          );
-          savedProfile = deviceProfile;
-        } catch (error) {
-          console.warn('Failed to create profile by device ID:', error);
-        }
-      }
-
-      // Set profile (from database or local)
-      if (savedProfile) {
-        setProfile(savedProfile);
-      } else {
-        // Fallback to local profile
-        setProfile({
-          id: user?.id || deviceId || 'local-user',
-          created_at: new Date().toISOString(),
-          age_group: ageGroup,
-          nickname: nickname,
-          device_id: deviceId || undefined,
-          preferred_categories: categories,
-        } as UserProfile);
-      }
-      
-      setIsOnboarded(true);
+      await persistProfile(profileToSave);
     } catch (error) {
       console.error('Select age group error:', error);
-      // Don't throw - allow user to continue
+      // Hata olsa bile kullanıcı akışı devam etsin
       setIsOnboarded(true);
+    }
+  };
+
+  const updateAgeGroup = async (ageGroup: AgeGroup) => {
+    if (!profile) return;
+    try {
+      const updatedProfile: LocalUserProfile = {
+        ...profile,
+        age_group: ageGroup,
+      };
+      await persistProfile(updatedProfile);
+    } catch (error) {
+      console.error('Update age group error:', error);
+      throw error;
+    }
+  };
+
+  const updatePreferredCategories = async (categories: string[]) => {
+    if (!profile) return;
+    try {
+      const updatedProfile: LocalUserProfile = {
+        ...profile,
+        preferred_categories: categories,
+      };
+      await persistProfile(updatedProfile);
+    } catch (error) {
+      console.error('Update preferred categories error:', error);
+      throw error;
     }
   };
 
   const updateParentEmail = async (email: string) => {
     try {
-      if (!user) throw new Error('No user session');
+      if (!profile) return;
 
-      // Update parent email in profile
-      const updatedProfile = await userService.getProfile(user.id);
-      setProfile(updatedProfile);
+      const updatedProfile: LocalUserProfile = {
+        ...profile,
+        parent_email: email,
+      };
+
+      await persistProfile(updatedProfile);
     } catch (error) {
       console.error('Update parent email error:', error);
       throw error;
@@ -192,8 +174,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      await authService.signOut();
-      setUser(null);
+      await AsyncStorage.removeItem(PROFILE_STORAGE_KEY);
       setProfile(null);
       setIsOnboarded(false);
     } catch (error) {
@@ -206,11 +187,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     user,
     profile,
     isLoading,
-    ageGroup: (profile?.age_group as AgeGroup) || null,
+    ageGroup: profile?.age_group ? normalizeAgeGroup(profile.age_group) : null,
     isOnboarded,
     deviceId,
     initializeSession,
     selectAgeGroup,
+    updateAgeGroup,
+    updatePreferredCategories,
     updateParentEmail,
     logout,
   };

@@ -6,25 +6,20 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Animated,
-  Easing,
-  Dimensions,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/RootNavigator';
-import { useTheme } from '../utils/themeContext';
-import { useAuth } from '../utils/authContext';
-import { aiService, Question } from '../services/aiService';
-import { getCategoriesByIds, getCategoryById } from '../utils/categories';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useTheme } from './utils/themeContext';
+import { useAuth } from './utils/authContext';
+import { aiService, Question } from './services/aiService';
 import { StatusBar } from 'expo-status-bar';
-
-const { width } = Dimensions.get('window');
-
-type Props = NativeStackScreenProps<RootStackParamList, 'QuestionGame'>;
 
 const QUESTIONS_PER_GAME = 10;
 
-const QuestionGameScreen = ({ navigation, route }: Props) => {
+const QuestionGameScreen = () => {
+  const router = useRouter();
+  const params = useLocalSearchParams<{ ageGroup?: string }>();
   const { theme } = useTheme();
   const { profile, ageGroup } = useAuth();
   
@@ -51,12 +46,21 @@ const QuestionGameScreen = ({ navigation, route }: Props) => {
     }
   }, [currentQuestion, questions.length]);
 
+  const handleBack = () => {
+    // Eğer geri gidilecek ekran varsa geri git, yoksa ana sayfaya yönlendir
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
+  };
+
   const loadQuestions = async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const userAgeGroup = ageGroup || route.params?.ageGroup || 'G3';
+      const userAgeGroup = ageGroup || params?.ageGroup || 'EARLY_PRIMARY';
       const userCategories = profile?.preferred_categories || [];
 
       // Load questions from user's selected categories
@@ -115,7 +119,7 @@ const QuestionGameScreen = ({ navigation, route }: Props) => {
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
             <Text style={[styles.loadingText, { color: theme.colors.text }]}>
-              Sorular hazırlanıyor... 🎯
+              Peeky AI ile sorular hazırlanıyor 🎯
             </Text>
           </View>
         </SafeAreaView>
@@ -137,7 +141,7 @@ const QuestionGameScreen = ({ navigation, route }: Props) => {
             >
               <Text style={styles.retryButtonText}>Tekrar Dene</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <TouchableOpacity style={styles.backButton} onPress={handleBack}>
               <Text style={styles.backButtonText}>Ana Sayfaya Dön</Text>
             </TouchableOpacity>
           </View>
@@ -190,10 +194,6 @@ const QuestionGameScreen = ({ navigation, route }: Props) => {
     setGameEnded(false);
     // Load new questions for replay
     await loadQuestions();
-  };
-
-  const handleBack = () => {
-    navigation.goBack();
   };
 
   if (gameEnded) {
@@ -258,7 +258,15 @@ const QuestionGameScreen = ({ navigation, route }: Props) => {
           {/* Question Card */}
           <View style={styles.questionCard}>
             <Text style={styles.questionType}>{getCurrentCategoryName()}</Text>
-            <Text style={styles.questionText}>{question.text}</Text>
+            <ScrollView
+              style={styles.questionScroll}
+              contentContainerStyle={styles.questionScrollContent}
+              showsVerticalScrollIndicator={false}
+              bounces={false}
+              nestedScrollEnabled
+            >
+              <Text style={styles.questionText}>{question.text}</Text>
+            </ScrollView>
           </View>
 
           {/* Options List */}
@@ -392,8 +400,9 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     padding: 30,
     minHeight: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
+    maxHeight: 340,
+    justifyContent: 'flex-start',
+    alignItems: 'stretch',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.05,
@@ -407,13 +416,21 @@ const styles = StyleSheet.create({
     color: '#7000FF',
     letterSpacing: 2,
     marginBottom: 15,
+    alignSelf: 'center',
+  },
+  questionScroll: {
+    flex: 1,
+  },
+  questionScrollContent: {
+    paddingBottom: 4,
   },
   questionText: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '900',
     color: '#0F172A',
-    textAlign: 'center',
-    lineHeight: 32,
+    textAlign: 'left',
+    lineHeight: 28,
+    width: '100%',
   },
   optionsList: {
     gap: 12,

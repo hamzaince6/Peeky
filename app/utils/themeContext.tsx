@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { AgeGroup, getAgeGroupConfig } from '../utils/ageGroups';
+import { AgeGroup, AGE_GROUPS, getAgeGroupConfig, normalizeAgeGroup } from './ageGroups';
 
 interface Theme {
   ageGroup: AgeGroup;
@@ -9,15 +9,16 @@ interface Theme {
 
 interface ThemeContextType {
   theme: Theme;
-  setAgeGroup: (ageGroup: AgeGroup) => void;
+  setAgeGroup: (ageGroup: AgeGroup | string | null | undefined) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const [ageGroup, setAgeGroupState] = useState<AgeGroup>('G3');
+  const [ageGroup, setAgeGroupState] = useState<AgeGroup>(normalizeAgeGroup('EARLY_PRIMARY'));
 
-  const config = getAgeGroupConfig(ageGroup);
+  // Defensive: ageGroup might come from legacy/invalid persisted values
+  const config = getAgeGroupConfig(ageGroup) ?? AGE_GROUPS.EARLY_PRIMARY;
 
   const theme: Theme = {
     ageGroup,
@@ -25,8 +26,8 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     fontSize: config.fontSize,
   };
 
-  const setAgeGroup = (newAgeGroup: AgeGroup) => {
-    setAgeGroupState(newAgeGroup);
+  const setAgeGroup = (newAgeGroup: AgeGroup | string | null | undefined) => {
+    setAgeGroupState(normalizeAgeGroup(newAgeGroup));
   };
 
   return (

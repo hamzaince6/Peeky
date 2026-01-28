@@ -11,15 +11,12 @@ import {
   FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
-import { RootStackParamList } from '../navigation/RootNavigator';
+import { useRouter } from 'expo-router';
 import { useAuth } from '../utils/authContext';
 import { StatusBar } from 'expo-status-bar';
 
 const { width } = Dimensions.get('window');
-
-type Props = NativeStackScreenProps<RootStackParamList, 'GameHub'>;
 
 interface GameCard {
   id: string;
@@ -102,12 +99,13 @@ const EXPLORERS: ExplorerCard[] = [
   },
 ];
 
-const GameHubScreen = ({ navigation, route }: any) => {
+const GameHubScreen = () => {
+  const router = useRouter();
   const { profile, ageGroup } = useAuth();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const headerSlide = useRef(new Animated.Value(-20)).current;
 
-  const nickname = route?.params?.nickname || profile?.nickname || 'Oyuncu';
+  const nickname = profile?.nickname || 'Oyuncu';
 
   useEffect(() => {
     Animated.parallel([
@@ -126,10 +124,21 @@ const GameHubScreen = ({ navigation, route }: any) => {
   }, []);
 
   const handleGameSelect = (game: GameCard) => {
+    console.log('Game selected:', game.title, 'Status:', game.status, 'Type:', game.type);
+
     if (game.status === 'available' && game.type === 'questions') {
-      navigation.navigate('QuestionGame', {
-        ageGroup: ageGroup || 'G3',
-      });
+      // Eğer yaş grubu seçilmemişse önce yaş seçimine yönlendir
+      if (!ageGroup && !profile?.age_group) {
+        console.log('No age group selected, redirecting to age-selection');
+        router.push('/age-selection');
+        return;
+      }
+
+      const selectedAgeGroup = ageGroup || profile?.age_group || 'EARLY_PRIMARY';
+      console.log('Navigating to question-game with ageGroup:', selectedAgeGroup);
+      router.push(`/question-game?ageGroup=${selectedAgeGroup}`);
+    } else {
+      console.log('Game not available or wrong type');
     }
   };
 
@@ -138,11 +147,13 @@ const GameHubScreen = ({ navigation, route }: any) => {
       <StatusBar style="dark" />
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         {/* Unified Premium Profile Box */}
-        <Animated.View style={[styles.headerWrapper, { opacity: fadeAnim, transform: [{ translateY: headerSlide }] }]}>
+        <Animated.View
+          style={[styles.headerWrapper, { opacity: fadeAnim, transform: [{ translateY: headerSlide }] }]}
+        >
           <TouchableOpacity
             style={styles.profileBox}
             activeOpacity={0.9}
-            onPress={() => navigation.navigate('AgeSelection')}
+            onPress={() => router.push('/age-selection')}
           >
             <View style={styles.profileContent}>
               <View style={styles.profileAvatarBox}>
@@ -150,78 +161,57 @@ const GameHubScreen = ({ navigation, route }: any) => {
               </View>
               <View style={styles.profileInfo}>
                 <Text style={styles.profileGreeting}>Hoş Geldin 👋</Text>
-                <Text style={styles.profileName} numberOfLines={1}>{nickname}</Text>
+                <Text style={styles.profileName} numberOfLines={1}>
+                  {nickname}
+                </Text>
               </View>
-            </View>
-            <View style={styles.settingsActionBox}>
-              <Text style={styles.settingsSymbol}>⚙️</Text>
             </View>
           </TouchableOpacity>
         </Animated.View>
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           {/* Main Games Grid */}
           <View style={styles.gameGrid}>
-            {GAMES.map((game, index) => {
-              const scaleAnim = useRef(new Animated.Value(0)).current;
-
-              useEffect(() => {
-                Animated.spring(scaleAnim, {
-                  toValue: 1,
-                  tension: 50,
-                  friction: 7,
-                  delay: 200 + (index * 100),
-                  useNativeDriver: true,
-                }).start();
-              }, []);
-
-              return (
-                <Animated.View
-                  key={game.id}
-                  style={[
-                    styles.gameWrapper,
-                    {
-                      transform: [{ scale: scaleAnim }],
-                      opacity: fadeAnim
-                    }
-                  ]}
+            {GAMES.map((game) => (
+              <Animated.View
+                key={game.id}
+                style={[
+                  styles.gameWrapper,
+                  {
+                    opacity: fadeAnim,
+                  },
+                ]}
+              >
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => handleGameSelect(game)}
+                  disabled={game.status === 'coming-soon'}
+                  style={styles.touchable}
                 >
-                  <TouchableOpacity
-                    activeOpacity={0.9}
-                    onPress={() => handleGameSelect(game)}
-                    disabled={game.status === 'coming-soon'}
-                    style={styles.touchable}
+                  <LinearGradient
+                    colors={game.colors}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.cardGradient}
                   >
-                    <LinearGradient
-                      colors={game.colors}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={styles.cardGradient}
-                    >
-                      <View style={[styles.decorativeCircle, { transform: [{ rotate: game.rotate }] }]}>
-                        <Text style={styles.cardEmoji}>{game.emoji}</Text>
-                      </View>
+                    <View style={[styles.decorativeCircle, { transform: [{ rotate: game.rotate }] }]}>
+                      <Text style={styles.cardEmoji}>{game.emoji}</Text>
+                    </View>
 
-                      <View style={styles.infoContainer}>
-                        <Text style={styles.gameTitle}>{game.title}</Text>
-                        <View style={styles.playBadge}>
-                          <Text style={styles.playText}>
-                            {game.status === 'coming-soon' ? '🔒 Yakında' : 'Oyna 🚀'}
-                          </Text>
-                        </View>
+                    <View style={styles.infoContainer}>
+                      <Text style={styles.gameTitle}>{game.title}</Text>
+                      <View style={styles.playBadge}>
+                        <Text style={styles.playText}>
+                          {game.status === 'coming-soon' ? '🔒 Yakında' : 'Oyna 🚀'}
+                        </Text>
                       </View>
+                    </View>
 
-                      {game.status === 'coming-soon' && (
-                        <View style={styles.overlay} />
-                      )}
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </Animated.View>
-              );
-            })}
+                    {game.status === 'coming-soon' && <View style={styles.overlay} />}
+                  </LinearGradient>
+                </TouchableOpacity>
+              </Animated.View>
+            ))}
           </View>
 
           {/* Explorer Section with Slider */}
@@ -237,10 +227,7 @@ const GameHubScreen = ({ navigation, route }: any) => {
               contentContainerStyle={styles.explorerList}
               renderItem={({ item }) => (
                 <TouchableOpacity activeOpacity={0.9} style={styles.explorerCard}>
-                  <LinearGradient
-                    colors={item.colors}
-                    style={styles.explorerInner}
-                  >
+                  <LinearGradient colors={item.colors} style={styles.explorerInner}>
                     <View style={styles.explorerTextContainer}>
                       <Text style={styles.explorerTitle}>{item.title}</Text>
                       <Text style={styles.explorerSubtitle} numberOfLines={2}>
@@ -320,21 +307,8 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     marginTop: 2,
   },
-  settingsActionBox: {
-    width: 48,
-    height: 48,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  settingsSymbol: {
-    fontSize: 22,
-  },
   scrollContent: {
-    paddingBottom: 110, // Increased for floating bottom tabs
+    paddingBottom: 110, // Space for tab bar
   },
   gameGrid: {
     flexDirection: 'row',
@@ -460,3 +434,4 @@ const styles = StyleSheet.create({
 });
 
 export default GameHubScreen;
+

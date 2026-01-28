@@ -4,7 +4,7 @@
     "slug": "peeky-educational-games",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/peekylogo.png",
     "userInterfaceStyle": "light",
     "runtimeVersion": "1.0.0",
     "updates": {
@@ -13,7 +13,7 @@
       "fallbackToCacheTimeout": 1000
     },
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/peekylogo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -21,9 +21,12 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.peeky.educationalgames",
       "buildNumber": "1",
+      "icon": "./assets/peekylogo.png",
       "infoPlist": {
         "NSLocalNetworkUsageDescription": "This app needs access to your local network",
-        "NSBonjourServiceTypes": ["_app-clips._tcp"]
+        "NSBonjourServiceTypes": [
+          "_app-clips._tcp"
+        ]
       }
     },
     "android": {
@@ -53,7 +56,9 @@
       "display": "standalone",
       "orientation": "portrait"
     },
-    "plugins": [],
+    "plugins": [
+      "expo-router"
+    ],
     "extra": {
       "eas": {
         "projectId": "peeky-educational-games"

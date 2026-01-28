@@ -1,4 +1,11 @@
-export type AgeGroup = 'G1' | 'G2' | 'G3' | 'G4' | 'G5';
+// Age groups start from preschool, up to adult.
+export type AgeGroup =
+  | 'PRESCHOOL' // 3-5
+  | 'EARLY_PRIMARY' // 5-8
+  | 'LATE_PRIMARY' // 8-12
+  | 'MIDDLE_SCHOOL' // 12-15
+  | 'HIGH_SCHOOL' // 15-18
+  | 'ADULT'; // 18+
 
 export interface AgeGroupConfig {
   id: AgeGroup;
@@ -22,28 +29,8 @@ export interface AgeGroupConfig {
 }
 
 export const AGE_GROUPS: Record<AgeGroup, AgeGroupConfig> = {
-  G1: {
-    id: 'G1',
-    label: 'Bebekler',
-    ageRange: '0-3 yaş',
-    minAge: 0,
-    maxAge: 3,
-    colors: {
-      primary: '#FFB6C1', // Light pink
-      secondary: '#FFC0CB', // Pink
-      accent: '#FF69B4', // Hot pink
-      background: '#FFF0F5', // Lavender blush
-      text: '#8B0000', // Dark red
-    },
-    fontSize: {
-      title: 32,
-      body: 20,
-      button: 24,
-    },
-    description: 'Renk tanıma ve temel şekiller',
-  },
-  G2: {
-    id: 'G2',
+  PRESCHOOL: {
+    id: 'PRESCHOOL',
     label: 'Okul Öncesi',
     ageRange: '3-5 yaş',
     minAge: 3,
@@ -60,10 +47,10 @@ export const AGE_GROUPS: Record<AgeGroup, AgeGroupConfig> = {
       body: 18,
       button: 20,
     },
-    description: 'Sayılar, hayvanlar, temel sözcükler',
+    description: 'Renkler, şekiller, basit sayma',
   },
-  G3: {
-    id: 'G3',
+  EARLY_PRIMARY: {
+    id: 'EARLY_PRIMARY',
     label: 'İlkokul (Başlangıç)',
     ageRange: '5-8 yaş',
     minAge: 5,
@@ -80,10 +67,10 @@ export const AGE_GROUPS: Record<AgeGroup, AgeGroupConfig> = {
       body: 16,
       button: 18,
     },
-    description: 'Matematik, okuma, bilim temeleri',
+    description: 'Temel matematik, okuma, fen',
   },
-  G4: {
-    id: 'G4',
+  LATE_PRIMARY: {
+    id: 'LATE_PRIMARY',
     label: 'İlkokul (İleri)',
     ageRange: '8-12 yaş',
     minAge: 8,
@@ -100,10 +87,10 @@ export const AGE_GROUPS: Record<AgeGroup, AgeGroupConfig> = {
       body: 15,
       button: 17,
     },
-    description: 'Zorlayıcı matematik, fen bilimleri, mantık',
+    description: 'Zorlayıcı matematik, fen, mantık',
   },
-  G5: {
-    id: 'G5',
+  MIDDLE_SCHOOL: {
+    id: 'MIDDLE_SCHOOL',
     label: 'Ortaokul',
     ageRange: '12-15 yaş',
     minAge: 12,
@@ -122,6 +109,46 @@ export const AGE_GROUPS: Record<AgeGroup, AgeGroupConfig> = {
     },
     description: 'Karmaşık problemler, eleştirel düşünme',
   },
+  HIGH_SCHOOL: {
+    id: 'HIGH_SCHOOL',
+    label: 'Lise',
+    ageRange: '15-18 yaş',
+    minAge: 15,
+    maxAge: 18,
+    colors: {
+      primary: '#60A5FA', // Blue
+      secondary: '#3B82F6', // Blue
+      accent: '#1D4ED8', // Dark blue
+      background: '#EFF6FF', // Light blue bg
+      text: '#0F172A', // Slate
+    },
+    fontSize: {
+      title: 20,
+      body: 14,
+      button: 16,
+    },
+    description: 'Daha analitik sorular, sağlam çeldiriciler',
+  },
+  ADULT: {
+    id: 'ADULT',
+    label: 'Yetişkin',
+    ageRange: '18+',
+    minAge: 18,
+    maxAge: 120,
+    colors: {
+      primary: '#0F172A', // Slate
+      secondary: '#1F2937', // Gray
+      accent: '#7000FF', // Brand purple
+      background: '#F8FAFC', // App bg
+      text: '#0F172A',
+    },
+    fontSize: {
+      title: 20,
+      body: 14,
+      button: 16,
+    },
+    description: 'Yetişkinlere uygun genel kültür ve mantık',
+  },
 };
 
 export const getAgeGroupConfig = (ageGroup: AgeGroup): AgeGroupConfig => {
@@ -129,9 +156,38 @@ export const getAgeGroupConfig = (ageGroup: AgeGroup): AgeGroupConfig => {
 };
 
 export const getAgeGroupByAge = (age: number): AgeGroup => {
-  if (age < 3) return 'G1';
-  if (age < 5) return 'G2';
-  if (age < 8) return 'G3';
-  if (age < 12) return 'G4';
-  return 'G5';
+  if (age < 5) return 'PRESCHOOL';
+  if (age < 8) return 'EARLY_PRIMARY';
+  if (age < 12) return 'LATE_PRIMARY';
+  if (age < 15) return 'MIDDLE_SCHOOL';
+  if (age < 18) return 'HIGH_SCHOOL';
+  return 'ADULT';
+};
+
+export const normalizeAgeGroup = (ageGroup: string | null | undefined): AgeGroup => {
+  const key = (ageGroup || '').trim();
+  if (
+    key === 'PRESCHOOL' ||
+    key === 'EARLY_PRIMARY' ||
+    key === 'LATE_PRIMARY' ||
+    key === 'MIDDLE_SCHOOL' ||
+    key === 'HIGH_SCHOOL' ||
+    key === 'ADULT'
+  ) {
+    return key;
+  }
+
+  // Legacy support (old G1..G5 stored in AsyncStorage)
+  switch ((key || '').toUpperCase()) {
+    case 'G2':
+      return 'PRESCHOOL';
+    case 'G3':
+      return 'EARLY_PRIMARY';
+    case 'G4':
+      return 'LATE_PRIMARY';
+    case 'G5':
+      return 'MIDDLE_SCHOOL';
+    default:
+      return 'EARLY_PRIMARY';
+  }
 };

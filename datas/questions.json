@@ -1,0 +1,431 @@
+{
+  "G1": [],
+  "G2": [],
+  "G3": [
+    {
+      "text": "2 + 3 kaç eder?",
+      "options": ["3", "4", "5", "6"],
+      "correct_index": 2,
+      "topic": "math"
+    },
+    {
+      "text": "5 + 4 kaç eder?",
+      "options": ["8", "9", "10", "11"],
+      "correct_index": 1,
+      "topic": "math"
+    },
+    {
+      "text": "10 − 6 kaç eder?",
+      "options": ["3", "4", "5", "6"],
+      "correct_index": 1,
+      "topic": "math"
+    },
+    {
+      "text": "7 − 2 kaç eder?",
+      "options": ["4", "5", "6", "7"],
+      "correct_index": 1,
+      "topic": "math"
+    },
+    {
+      "text": "3 + 7 kaç eder?",
+      "options": ["9", "10", "11", "12"],
+      "correct_index": 1,
+      "topic": "math"
+    },
+    {
+      "text": "9 − 5 kaç eder?",
+      "options": ["3", "4", "5", "6"],
+      "correct_index": 1,
+      "topic": "math"
+    },
+    {
+      "text": "4 + 4 kaç eder?",
+      "options": ["6", "7", "8", "9"],
+      "correct_index": 2,
+      "topic": "math"
+    },
+    {
+      "text": "6 + 3 kaç eder?",
+      "options": ["7", "8", "9", "10"],
+      "correct_index": 2,
+      "topic": "math"
+    },
+    {
+      "text": "8 − 3 kaç eder?",
+      "options": ["4", "5", "6", "7"],
+      "correct_index": 1,
+      "topic": "math"
+    },
+    {
+      "text": "1 + 9 kaç eder?",
+      "options": ["9", "10", "11", "12"],
+      "correct_index": 1,
+      "topic": "math"
+    },
+    {
+      "text": "Bir saatte kaç dakika vardır?",
+      "options": ["30", "45", "60", "90"],
+      "correct_index": 2,
+      "topic": "math"
+    },
+    {
+      "text": "Bir üçgenin kaç köşesi vardır?",
+      "options": ["2", "3", "4", "5"],
+      "correct_index": 1,
+      "topic": "math"
+    },
+    {
+      "text": "Bir dikdörtgenin kaç köşesi vardır?",
+      "options": ["2", "3", "4", "5"],
+      "correct_index": 2,
+      "topic": "math"
+    },
+    {
+      "text": "Saat 3'ten iki saat sonra saat kaç olur?",
+      "options": ["4", "5", "6", "7"],
+      "correct_index": 1,
+      "topic": "math"
+    },
+    {
+      "text": "10 sayısından sonra hangi sayı gelir?",
+      "options": ["9", "10", "11", "12"],
+      "correct_index": 2,
+      "topic": "math"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi çift sayıdır?",
+      "options": ["3", "5", "8", "9"],
+      "correct_index": 2,
+      "topic": "math"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi tek sayıdır?",
+      "options": ["2", "4", "6", "9"],
+      "correct_index": 3,
+      "topic": "math"
+    },
+    {
+      "text": "En küçük doğal sayı hangisidir?",
+      "options": ["0", "1", "2", "3"],
+      "correct_index": 0,
+      "topic": "math"
+    },
+    {
+      "text": "5 + 5 kaç eder?",
+      "options": ["9", "10", "11", "12"],
+      "correct_index": 1,
+      "topic": "math"
+    },
+    {
+      "text": "12 − 3 kaç eder?",
+      "options": ["8", "9", "10", "11"],
+      "correct_index": 1,
+      "topic": "math"
+    },
+    {
+      "text": "7 + 1 kaç eder?",
+      "options": ["7", "8", "9", "10"],
+      "correct_index": 1,
+      "topic": "math"
+    },
+    {
+      "text": "6 − 1 kaç eder?",
+      "options": ["4", "5", "6", "7"],
+      "correct_index": 1,
+      "topic": "math"
+    },
+    {
+      "text": "3 + 6 kaç eder?",
+      "options": ["7", "8", "9", "10"],
+      "correct_index": 2,
+      "topic": "math"
+    },
+    {
+      "text": "9 − 4 kaç eder?",
+      "options": ["3", "4", "5", "6"],
+      "correct_index": 2,
+      "topic": "math"
+    },
+    {
+      "text": "2 + 7 kaç eder?",
+      "options": ["8", "9", "10", "11"],
+      "correct_index": 1,
+      "topic": "math"
+    },
+    {
+      "text": "Dünya'nın etrafında döndüğü gök cismi hangisidir?",
+      "options": ["Güneş", "Ay", "Mars", "Venüs"],
+      "correct_index": 0,
+      "topic": "science"
+    },
+    {
+      "text": "Gündüzleri gökyüzünde gördüğümüz büyük ve parlak cisim hangisidir?",
+      "options": ["Ay", "Güneş", "Yıldız", "Bulut"],
+      "correct_index": 1,
+      "topic": "science"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi bir mevsim değildir?",
+      "options": ["Yaz", "Kış", "Hafta", "İlkbahar"],
+      "correct_index": 2,
+      "topic": "science"
+    },
+    {
+      "text": "Bitkilerin büyümesi için en çok hangisine ihtiyaç vardır?",
+      "options": ["Işık ve su", "Sadece karanlık", "Sadece rüzgâr", "Sadece ses"],
+      "correct_index": 0,
+      "topic": "science"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi bir duyu organımızdır?",
+      "options": ["El", "Burun", "Diz", "Ayak"],
+      "correct_index": 1,
+      "topic": "science"
+    },
+    {
+      "text": "Kalbimiz vücudumuzda ne işe yarar?",
+      "options": ["Yemekleri sindirir", "Kan pompalar", "Nefes aldırır", "Konuşmamızı sağlar"],
+      "correct_index": 1,
+      "topic": "science"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi suya örnektir?",
+      "options": ["Taş", "Deniz", "Kağıt", "Cam"],
+      "correct_index": 1,
+      "topic": "science"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi bir hayvandır?",
+      "options": ["Ağaç", "Balık", "Bulut", "Taş"],
+      "correct_index": 1,
+      "topic": "science"
+    },
+    {
+      "text": "Kışın havalar genellikle nasıldır?",
+      "options": ["Sıcak", "Soğuk", "Her zaman yağmurlu", "Her zaman rüzgarlı"],
+      "correct_index": 1,
+      "topic": "science"
+    },
+    {
+      "text": "Gökkuşağında aşağıdakilerden hangisi bulunur?",
+      "options": ["Renkler", "Sesler", "Tatlar", "Kokular"],
+      "correct_index": 0,
+      "topic": "science"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi yenilebilen bir besindir?",
+      "options": ["Defter", "Kalem", "Elma", "Silgi"],
+      "correct_index": 2,
+      "topic": "science"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi bir taşıt değildir?",
+      "options": ["Araba", "Otobüs", "Uçak", "Ağaç"],
+      "correct_index": 3,
+      "topic": "science"
+    },
+    {
+      "text": "İnsanlar nefes alırken hangi gazı çeker?",
+      "options": ["Oksijen", "Karbon", "Su buharı", "Duman"],
+      "correct_index": 0,
+      "topic": "science"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi bir masal kahramanı olabilir?",
+      "options": ["Kırmızı Başlıklı Kız", "Dünya", "Güneş", "Tahta"],
+      "correct_index": 0,
+      "topic": "reading"
+    },
+    {
+      "text": "“Bir varmış bir yokmuş...” cümlesi genelde hangi tür metnin başında olur?",
+      "options": ["Haber", "Masal", "Mektup", "Şiir"],
+      "correct_index": 1,
+      "topic": "reading"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi noktalama işaretidir?",
+      "options": ["!", "@", "#", "$"],
+      "correct_index": 0,
+      "topic": "reading"
+    },
+    {
+      "text": "“Kitap” kelimesi kaç harflidir?",
+      "options": ["3", "4", "5", "6"],
+      "correct_index": 2,
+      "topic": "reading"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi bir cümledir?",
+      "options": ["Güzel", "Ev", "Top", "Bugün hava çok güzel"],
+      "correct_index": 3,
+      "topic": "reading"
+    },
+    {
+      "text": "“Sabah” kelimesinin zıt anlamlısı hangisidir?",
+      "options": ["Gece", "Öğle", "Akşamüstü", "Hiçbiri"],
+      "correct_index": 0,
+      "topic": "reading"
+    },
+    {
+      "text": "“Büyük” kelimesinin eş anlamlısı hangisidir?",
+      "options": ["Küçük", "İri", "Az", "Kısa"],
+      "correct_index": 1,
+      "topic": "reading"
+    },
+    {
+      "text": "Cümlenin sonuna soru anlamı varsa hangi işaret gelir?",
+      "options": [".", "!", "?", ","],
+      "correct_index": 2,
+      "topic": "reading"
+    },
+    {
+      "text": "“Okul” kelimesi aşağıdaki hangi gruba girer?",
+      "options": ["Meyve", "Hayvan", "Yer", "Araç"],
+      "correct_index": 2,
+      "topic": "reading"
+    },
+    {
+      "text": "“Kalem, silgi, defter” hangisiyle birlikte aynı gruptadır?",
+      "options": ["Kırtasiye eşyaları", "Meyveler", "Hayvanlar", "Taşıtlar"],
+      "correct_index": 0,
+      "topic": "reading"
+    },
+    {
+      "text": "Türkiye'nin başkenti neresidir?",
+      "options": ["İstanbul", "Ankara", "İzmir", "Bursa"],
+      "correct_index": 1,
+      "topic": "geography"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi bir ülkedir?",
+      "options": ["Asya", "Avrupa", "Türkiye", "Akdeniz"],
+      "correct_index": 2,
+      "topic": "geography"
+    },
+    {
+      "text": "Türkiye'nin üç tarafı hangi varlıklarla çevrilidir?",
+      "options": ["Dağ", "Deniz", "Çöl", "Orman"],
+      "correct_index": 1,
+      "topic": "geography"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi bir yön değildir?",
+      "options": ["Kuzey", "Güney", "Sağ", "Doğu"],
+      "correct_index": 2,
+      "topic": "geography"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi bir deniz ismidir?",
+      "options": ["Marmara", "Ankara", "Erzurum", "Van"],
+      "correct_index": 0,
+      "topic": "geography"
+    },
+    {
+      "text": "Atatürk hangi şehrimizde doğmuştur?",
+      "options": ["İstanbul", "Selanik", "Ankara", "İzmir"],
+      "correct_index": 1,
+      "topic": "history"
+    },
+    {
+      "text": "29 Ekim'de hangi bayramı kutlarız?",
+      "options": ["Zafer Bayramı", "Cumhuriyet Bayramı", "23 Nisan", "19 Mayıs"],
+      "correct_index": 1,
+      "topic": "history"
+    },
+    {
+      "text": "23 Nisan hangi bayramdır?",
+      "options": [
+        "Ulusal Egemenlik ve Çocuk Bayramı",
+        "Cumhuriyet Bayramı",
+        "Zafer Bayramı",
+        "Ramazan Bayramı"
+      ],
+      "correct_index": 0,
+      "topic": "history"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi bir milli bayramdır?",
+      "options": ["Ramazan Bayramı", "Kurban Bayramı", "19 Mayıs", "Yeni Yıl"],
+      "correct_index": 2,
+      "topic": "history"
+    },
+    {
+      "text": "Türkiye Cumhuriyeti'nin kurucusu kimdir?",
+      "options": [
+        "Fatih Sultan Mehmet",
+        "Yavuz Sultan Selim",
+        "Mustafa Kemal Atatürk",
+        "Kanuni Sultan Süleyman"
+      ],
+      "correct_index": 2,
+      "topic": "history"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi genel kültür sorusuna örnektir?",
+      "options": [
+        "Türkiye'nin başkenti neresidir?",
+        "2 + 2 kaç eder?",
+        "Hangi sayı tek?",
+        "Üçgenin kaç kenarı var?"
+      ],
+      "correct_index": 0,
+      "topic": "general_knowledge"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi bir spor dalıdır?",
+      "options": ["Futbol", "Kitap", "Masa", "Defter"],
+      "correct_index": 0,
+      "topic": "general_knowledge"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi bir müzik aletidir?",
+      "options": ["Gitar", "Sandalye", "Lamba", "Kapı"],
+      "correct_index": 0,
+      "topic": "general_knowledge"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi bir meslektir?",
+      "options": ["Doktor", "Masa", "Kalem", "Ağaç"],
+      "correct_index": 0,
+      "topic": "general_knowledge"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi bir hava olayıdır?",
+      "options": ["Yağmur", "Kalem", "Araba", "Sandalye"],
+      "correct_index": 0,
+      "topic": "general_knowledge"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi bir duygu değildir?",
+      "options": ["Mutluluk", "Üzüntü", "Sandviç", "Korku"],
+      "correct_index": 2,
+      "topic": "general_knowledge"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi sağlıklı bir atıştırmalıktır?",
+      "options": ["Cips", "Elma", "Kola", "Şeker"],
+      "correct_index": 1,
+      "topic": "general_knowledge"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi gece gökyüzünde görülebilir?",
+      "options": ["Yıldız", "Güneş", "Bulut", "Deniz"],
+      "correct_index": 0,
+      "topic": "general_knowledge"
+    },
+    {
+      "text": "Aşağıdakilerden hangisi bir çizgi film karakteri olabilir?",
+      "options": ["Sünger Bob", "Masa", "Kitap", "Koltuk"],
+      "correct_index": 0,
+      "topic": "general_knowledge"
+    },
+    {
+      "text": "Okula giderken yanımıza hangisini alırız?",
+      "options": ["Valiz", "Okul çantası", "Yastık", "Tava"],
+      "correct_index": 1,
+      "topic": "general_knowledge"
+    }
+  ],
+  "G4": []
+}
+
