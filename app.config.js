@@ -2,6 +2,7 @@ module.exports = {
   expo: {
     name: 'Peeky - Eğitici Oyunlar',
     slug: 'peeky-educational-games',
+    scheme: 'peeky',
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/peekylogo.png',
@@ -20,7 +21,7 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.peeky.educationalgames',
-      buildNumber: '8',
+      buildNumber: '9',
       icon: './assets/peekylogo.png',
       infoPlist: {
         NSLocalNetworkUsageDescription: 'This app needs access to your local network',
@@ -35,7 +36,7 @@ module.exports = {
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
       package: 'com.peeky.educationalgames',
-      versionCode: '8',
+      versionCode: '9',
       permissions: [
         'android.permission.INTERNET',
         'android.permission.CAMERA',
