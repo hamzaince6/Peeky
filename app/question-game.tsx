@@ -10,12 +10,27 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from './utils/themeContext';
 import { useAuth } from './utils/authContext';
 import { aiService, Question } from './services/aiService';
 import { StatusBar } from 'expo-status-bar';
 
 const QUESTIONS_PER_GAME = 10;
+const QUESTION_HISTORY_KEY = 'peeky_question_history';
+
+type QuestionGameHistoryItem = {
+  id: string;
+  createdAt: string;
+  game: 'Soru Dünyası';
+  score: number;
+  total: number;
+  percentage: number;
+  ageGroup?: string;
+};
+
+const generateHistoryId = () =>
+  `qhist_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 
 const QuestionGameScreen = () => {
   const router = useRouter();
@@ -30,6 +45,7 @@ const QuestionGameScreen = () => {
   const [gameEnded, setGameEnded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [usedAgeGroup, setUsedAgeGroup] = useState<string>('EARLY_PRIMARY');
 
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
@@ -61,6 +77,7 @@ const QuestionGameScreen = () => {
       setError(null);
 
       const userAgeGroup = ageGroup || params?.ageGroup || 'EARLY_PRIMARY';
+      setUsedAgeGroup(userAgeGroup);
       const userCategories = profile?.preferred_categories || [];
 
       // Load questions from user's selected categories
@@ -152,19 +169,42 @@ const QuestionGameScreen = () => {
 
   const question = questions[currentQuestion];
 
+  const saveGameToHistory = async (finalScore: number, total: number, percentage: number) => {
+    const newItem: QuestionGameHistoryItem = {
+      id: generateHistoryId(),
+      createdAt: new Date().toISOString(),
+      game: 'Soru Dünyası',
+      score: finalScore,
+      total,
+      percentage,
+      ageGroup: usedAgeGroup,
+    };
+
+    try {
+      const existingRaw = await AsyncStorage.getItem(QUESTION_HISTORY_KEY);
+      const existing: QuestionGameHistoryItem[] = existingRaw ? JSON.parse(existingRaw) : [];
+      const next = [newItem, ...existing].slice(0, 50);
+      await AsyncStorage.setItem(QUESTION_HISTORY_KEY, JSON.stringify(next));
+    } catch (e) {
+      console.warn('Failed to save question game history', e);
+    }
+  };
+
   const handleAnswerSelect = (index: number) => {
     if (selectedAnswer !== null) return;
 
     setSelectedAnswer(index);
     const isCorrect = index === question.correct_index;
-    if (isCorrect) {
-      setScore(score + 1);
-    }
+    const nextScore = isCorrect ? score + 1 : score;
+    setScore(nextScore);
 
     setTimeout(() => {
       if (currentQuestion < questions.length - 1) {
         animateNextQuestion();
       } else {
+        const total = questions.length;
+        const percentage = Math.round((nextScore / total) * 100);
+        saveGameToHistory(nextScore, total, percentage);
         setGameEnded(true);
       }
     }, 1200);

@@ -1,14 +1,42 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Text, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const QUESTION_HISTORY_KEY = 'peeky_question_history';
+
+type QuestionGameHistoryItem = {
+  id: string;
+  createdAt: string;
+  game: 'Soru Dünyası';
+  score: number;
+  total: number;
+  percentage: number;
+  ageGroup?: string;
+};
 
 const HistoryScreen = () => {
-  const historyItems = [
-    { id: '1', game: 'Soru Dünyası', score: '8/10', date: 'Bugün, 14:20', color: '#7000FF' },
-    { id: '2', game: 'Soru Dünyası', score: '9/10', date: 'Dün, 18:45', color: '#7000FF' },
-    { id: '3', game: 'Soru Dünyası', score: '10/10', date: '21 Ocak, 11:30', color: '#7000FF' },
-  ];
+  const [questionHistory, setQuestionHistory] = useState<QuestionGameHistoryItem[]>([]);
+
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const raw = await AsyncStorage.getItem(QUESTION_HISTORY_KEY);
+        if (!raw) {
+          setQuestionHistory([]);
+          return;
+        }
+        const parsed: QuestionGameHistoryItem[] = JSON.parse(raw);
+        setQuestionHistory(parsed);
+      } catch (e) {
+        console.warn('Failed to load question history', e);
+        setQuestionHistory([]);
+      }
+    };
+
+    loadHistory();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -19,25 +47,39 @@ const HistoryScreen = () => {
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          {historyItems.map((item) => (
-            <View key={item.id} style={styles.historyCard}>
-              <View style={[styles.iconBox, { backgroundColor: item.color + '15' }]}>
-                <Text style={styles.iconText}>🏆</Text>
-              </View>
-              <View style={styles.infoBox}>
-                <Text style={styles.gameName}>{item.game}</Text>
-                <Text style={styles.dateText}>{item.date}</Text>
-              </View>
-              <View style={styles.scoreBox}>
-                <Text style={[styles.scoreText, { color: item.color }]}>{item.score}</Text>
-              </View>
-            </View>
-          ))}
+          {questionHistory.map((item) => {
+            const date = new Date(item.createdAt);
+            const formattedDate = date.toLocaleString('tr-TR', {
+              day: '2-digit',
+              month: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+            });
+            const scoreText = `${item.score}/${item.total}`;
+            const color = '#7000FF';
 
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>🌟</Text>
-            <Text style={styles.emptyText}>Daha fazla oyun oyna, listeyi doldur!</Text>
-          </View>
+            return (
+              <View key={item.id} style={styles.historyCard}>
+                <View style={[styles.iconBox, { backgroundColor: color + '15' }]}>
+                  <Text style={styles.iconText}>🏆</Text>
+                </View>
+                <View style={styles.infoBox}>
+                  <Text style={styles.gameName}>{item.game}</Text>
+                  <Text style={styles.dateText}>{formattedDate}</Text>
+                </View>
+                <View style={styles.scoreBox}>
+                  <Text style={[styles.scoreText, { color }]}>{scoreText}</Text>
+                </View>
+              </View>
+            );
+          })}
+
+          {questionHistory.length === 0 && (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyEmoji}>🌟</Text>
+              <Text style={styles.emptyText}>Daha fazla oyun oyna, listeyi doldur!</Text>
+            </View>
+          )}
         </ScrollView>
       </SafeAreaView>
     </View>

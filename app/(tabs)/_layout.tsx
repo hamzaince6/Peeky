@@ -5,17 +5,17 @@ export default function TabsLayout() {
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="index">
-        <Label>Home</Label>
+        <Label>Ana Sayfa</Label>
         <Icon sf="house.fill" />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="history">
-        <Label>History</Label>
+        <Label>Geçmiş</Label>
         <Icon sf="clock.fill" />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="settings">
-        <Label>Settings</Label>
+        <Label>Ayarlar</Label>
         <Icon sf="gear" />
       </NativeTabs.Trigger>
     </NativeTabs>

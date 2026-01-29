@@ -51,27 +51,27 @@ const GAMES: GameCard[] = [
     title: 'Çizim Atölyesi',
     emoji: '🎨',
     type: 'drawing',
-    status: 'coming-soon',
+    status: 'available',
     colors: ['#FF0080', '#FF5B9D'],
     rotate: '10deg',
   },
   {
     id: '3',
+    title: 'Hafıza Bahçesi',
+    emoji: '🧠',
+    type: 'memory',
+    status: 'available',
+    colors: ['#00C7BE', '#59E1D4'],
+    rotate: '12deg',
+  },
+  {
+    id: '4',
     title: 'Mantık Köyü',
     emoji: '🧩',
     type: 'logic',
     status: 'coming-soon',
     colors: ['#FF9500', '#FFB74D'],
     rotate: '-5deg',
-  },
-  {
-    id: '4',
-    title: 'Hafıza Bahçesi',
-    emoji: '🧠',
-    type: 'memory',
-    status: 'coming-soon',
-    colors: ['#00C7BE', '#59E1D4'],
-    rotate: '12deg',
   },
 ];
 
@@ -126,7 +126,12 @@ const GameHubScreen = () => {
   const handleGameSelect = (game: GameCard) => {
     console.log('Game selected:', game.title, 'Status:', game.status, 'Type:', game.type);
 
-    if (game.status === 'available' && game.type === 'questions') {
+    if (game.status !== 'available') {
+      console.log('Game not available yet');
+      return;
+    }
+
+    if (game.type === 'questions') {
       // Eğer yaş grubu seçilmemişse önce yaş seçimine yönlendir
       if (!ageGroup && !profile?.age_group) {
         console.log('No age group selected, redirecting to age-selection');
@@ -137,9 +142,22 @@ const GameHubScreen = () => {
       const selectedAgeGroup = ageGroup || profile?.age_group || 'EARLY_PRIMARY';
       console.log('Navigating to question-game with ageGroup:', selectedAgeGroup);
       router.push(`/question-game?ageGroup=${selectedAgeGroup}`);
-    } else {
-      console.log('Game not available or wrong type');
+      return;
     }
+
+    if (game.type === 'drawing') {
+      console.log('Navigating to drawing-workshop');
+      router.push('/drawing-workshop');
+      return;
+    }
+
+    if (game.type === 'memory') {
+      console.log('Navigating to memory-garden');
+      router.push('/memory-garden');
+      return;
+    }
+
+    console.log('Game type not handled yet');
   };
 
   return (

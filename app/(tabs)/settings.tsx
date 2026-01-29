@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Switch } from 'react-native';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -17,9 +17,7 @@ const Badge = ({ text }: { text: string }) => {
 
 const SettingsScreen = () => {
   const router = useRouter();
-  const { profile, logout } = useAuth();
-  const [isNotifications, setNotifications] = React.useState(true);
-  const [isSounds, setSounds] = React.useState(true);
+  const { profile } = useAuth();
 
   const currentAgeGroup = profile?.age_group ? normalizeAgeGroup(profile.age_group) : null;
   const currentAgeGroupLabel = currentAgeGroup ? AGE_GROUPS[currentAgeGroup].label : null;
@@ -49,24 +47,14 @@ const SettingsScreen = () => {
             </View>
           </View>
 
-          {/* Preferences Section */}
+          {/* Policies Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>TERCİHLER</Text>
+            <Text style={styles.sectionTitle}>POLİTİKALAR</Text>
             <View style={styles.settingRow}>
-              <Text style={styles.settingLabel}>Bildirimler</Text>
-              <Switch
-                value={isNotifications}
-                onValueChange={setNotifications}
-                trackColor={{ false: '#E2E8F0', true: '#7000FF' }}
-              />
+              <Text style={styles.settingLabel}>Gizlilik Politikası</Text>
             </View>
             <View style={styles.settingRow}>
-              <Text style={styles.settingLabel}>Ses Efektleri</Text>
-              <Switch
-                value={isSounds}
-                onValueChange={setSounds}
-                trackColor={{ false: '#E2E8F0', true: '#FF0080' }}
-              />
+              <Text style={styles.settingLabel}>Kullanım Koşulları</Text>
             </View>
           </View>
 
@@ -77,14 +65,11 @@ const SettingsScreen = () => {
               <Text style={styles.actionButtonText}>Profil Ayarları</Text>
               <Text style={styles.actionIcon}>→</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.actionButton, styles.logoutButton]} onPress={logout}>
-              <Text style={[styles.actionButtonText, styles.logoutText]}>Çıkış Yap</Text>
-            </TouchableOpacity>
           </View>
 
           <View style={styles.versionInfo}>
             <Text style={styles.versionText}>Peeky v1.0.0</Text>
-            <Text style={styles.versionText}>Made with ❤️ for Kids</Text>
+            <Text style={styles.versionText}>Çocuklar için sevgiyle hazırlandı ❤️</Text>
           </View>
         </ScrollView>
       </SafeAreaView>
