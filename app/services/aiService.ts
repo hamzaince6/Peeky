@@ -7,14 +7,14 @@
 // - Ek olarak, `generateQuestionsWithGemini` fonksiyonu ile client-side Gemini isteği atılabilir.
 
 // NOTE: Gemini çağrısı tamamen client-side yapılır.
-// API anahtarını `.env` dosyasında EXPO_PUBLIC_GEMINI_API_KEY olarak tanımlaman gerekir.
+// API anahtarı app.config.js'de extra içinde gömülü olarak tanımlıdır.
 
+import Constants from 'expo-constants';
 import { buildQuestionsPrompt } from '../../prompts/questions';
 
-const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || '';
-// Model name can be overridden at runtime via `.env`
-// Example: EXPO_PUBLIC_GEMINI_MODEL=gemini-2.5-flash
-const GEMINI_MODEL = process.env.EXPO_PUBLIC_GEMINI_MODEL || 'gemini-2.5-flash';
+// Constants.extra'dan oku (build-time'da app.config.js'den gelir)
+const GEMINI_API_KEY = (Constants.expoConfig?.extra as any)?.EXPO_PUBLIC_GEMINI_API_KEY || '';
+const GEMINI_MODEL = (Constants.expoConfig?.extra as any)?.EXPO_PUBLIC_GEMINI_MODEL || 'gemini-2.5-flash';
 
 // Keep the Question shape as-is so existing screens keep working.
 export interface Question {
@@ -159,7 +159,7 @@ export const aiService = {
     if (!GEMINI_API_KEY) {
       console.warn(
         'EXPO_PUBLIC_GEMINI_API_KEY tanımlı değil, Gemini isteği atılamıyor. ' +
-          'Proje köküne `.env` ekleyip EXPO_PUBLIC_GEMINI_API_KEY=... yazmalısın.'
+          'app.config.js dosyasında EXPO_PUBLIC_GEMINI_API_KEY tanımlı olmalı.'
       );
       return [];
     }

@@ -20,7 +20,7 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.peeky.educationalgames',
-      buildNumber: '6',
+      buildNumber: '7',
       icon: './assets/peekylogo.png',
       infoPlist: {
         NSLocalNetworkUsageDescription: 'This app needs access to your local network',
@@ -35,7 +35,7 @@ module.exports = {
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
       package: 'com.peeky.educationalgames',
-      versionCode: '6',
+      versionCode: '7',
       permissions: [
         'android.permission.INTERNET',
         'android.permission.CAMERA',
@@ -59,9 +59,9 @@ module.exports = {
       eas: {
         projectId: 'peeky-educational-games',
       },
-      // Environment variables'ı extra'ya ekle (build zamanında dahil edilir)
-      EXPO_PUBLIC_GEMINI_API_KEY: process.env.EXPO_PUBLIC_GEMINI_API_KEY || '',
-      EXPO_PUBLIC_GEMINI_MODEL: process.env.EXPO_PUBLIC_GEMINI_MODEL || 'gemini-2.5-flash',
+      // Environment variables'ı kodun içine göm (build zamanında dahil edilir)
+      EXPO_PUBLIC_GEMINI_API_KEY: 'AIzaSyC_SllXoCIoHBHwDJtBMWOgoYzoX22jdF4',
+      EXPO_PUBLIC_GEMINI_MODEL: 'gemini-2.5-flash',
     },
   },
 };
