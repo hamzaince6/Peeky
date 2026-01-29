@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user] = useState<null>(null);
   const [profile, setProfile] = useState<LocalUserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isOnboarded, setIsOnboarded] = useState(false);
+  const [isOnboarded, setIsOnboarded] = useState(true); // Direkt ana sayfaya git
   const [deviceId, setDeviceId] = useState<string | null>(null);
 
   const persistProfile = async (nextProfile: LocalUserProfile) => {
@@ -99,11 +99,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       }
 
-      // Profil yoksa kullanıcı onboarding akışına gidecek
-      setIsOnboarded(false);
+      // Profil yoksa bile direkt ana sayfaya git (onboarding yok)
+      setIsOnboarded(true);
     } catch (error) {
       console.error('Session initialization error:', error);
-      setIsOnboarded(false);
+      setIsOnboarded(true); // Hata olsa bile ana sayfaya git
     } finally {
       setIsLoading(false);
     }

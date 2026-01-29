@@ -6,7 +6,7 @@ import { AuthProvider, useAuth } from './utils/authContext';
 import { ThemeProvider } from './utils/themeContext';
 
 function RootInner() {
-  const { isLoading, isOnboarded } = useAuth();
+  const { isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -16,26 +16,15 @@ function RootInner() {
     );
   }
 
-  // Onboarding bittiyse NativeTabs göster, ama Stack içinde tut ki modal route'lar çalışsın
-  if (isOnboarded) {
-    return (
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }}>
-        </Stack.Screen>
-        {/* Modal/Overlay screens - her zaman erişilebilir */}
-        <Stack.Screen name="question-game" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="age-selection" options={{ presentation: 'modal' }} />
-      </Stack>
-    );
-  }
-
-  // Onboarding ekranları için Stack navigator
+  // Direkt ana sayfaya git (onboarding yok)
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="onboarding" />
-      <Stack.Screen name="multi-step-onboarding" />
-      <Stack.Screen name="age-selection" />
-      <Stack.Screen name="question-game" />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      {/* Modal/Overlay screens - her zaman erişilebilir */}
+      <Stack.Screen name="question-game" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="age-selection" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="drawing-workshop" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="memory-garden" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }
