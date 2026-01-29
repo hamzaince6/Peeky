@@ -1,11 +1,14 @@
 import React from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '../utils/authContext';
 import { AGE_GROUPS, normalizeAgeGroup } from '../utils/ageGroups';
 import { getCategoriesByIds } from '../utils/categories';
+
+const PRIVACY_POLICY_URL = 'https://doc-hosting.flycricket.io/peeky-egitici-oyunlar-privacy-policy/bcaca438-6457-49be-b7bf-625123c022d0/privacy';
+const TERMS_OF_USE_URL = 'https://doc-hosting.flycricket.io/peeky-egitici-oyunlar-terms-of-use/166f42e3-2276-4e12-ac67-944e27f1075a/terms';
 
 const Badge = ({ text }: { text: string }) => {
   return (
@@ -50,12 +53,22 @@ const SettingsScreen = () => {
           {/* Policies Section */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>POLİTİKALAR</Text>
-            <View style={styles.settingRow}>
+            <TouchableOpacity
+              style={styles.settingRow}
+              onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
+              activeOpacity={0.7}
+            >
               <Text style={styles.settingLabel}>Gizlilik Politikası</Text>
-            </View>
-            <View style={styles.settingRow}>
+              <Text style={styles.actionIcon}>→</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.settingRow}
+              onPress={() => Linking.openURL(TERMS_OF_USE_URL)}
+              activeOpacity={0.7}
+            >
               <Text style={styles.settingLabel}>Kullanım Koşulları</Text>
-            </View>
+              <Text style={styles.actionIcon}>→</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Account Section */}
