@@ -61,19 +61,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const bootstrap = async () => {
+      console.log('🔄 AuthProvider bootstrap starting...');
       try {
         // Cihaz kimliğini yükle / oluştur
+        console.log('📱 Loading device ID...');
         let storedId = await AsyncStorage.getItem(DEVICE_ID_STORAGE_KEY);
         if (!storedId) {
+          console.log('📱 Creating new device ID...');
           const newId = generateDeviceId();
           await AsyncStorage.setItem(DEVICE_ID_STORAGE_KEY, newId);
           storedId = newId;
         }
+        console.log('✅ Device ID loaded:', storedId);
         setDeviceId(storedId);
       } catch (error) {
-        console.warn('Failed to initialize device id', error);
+        console.error('❌ Failed to initialize device id:', error);
+        console.error('❌ Error details:', JSON.stringify(error, null, 2));
       } finally {
         // DeviceId denemesi bittikten sonra oturumu başlat
+        console.log('🔄 Starting session initialization...');
         initializeSession();
       }
     };
@@ -83,29 +89,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const initializeSession = async () => {
     try {
+      console.log('🔄 initializeSession starting...');
       setIsLoading(true);
 
       // Cihaz kimliğine göre daha önce kaydedilmiş local profili yüklemeyi dene
+      console.log('👤 Loading profile from storage...');
       const storedProfileJson = await AsyncStorage.getItem(PROFILE_STORAGE_KEY);
       if (storedProfileJson) {
         try {
+          console.log('📄 Parsing stored profile...');
           const storedProfile: LocalUserProfile = JSON.parse(storedProfileJson);
+          console.log('✅ Profile loaded:', storedProfile.nickname);
           setProfile(storedProfile);
           setIsOnboarded(true);
+          setIsLoading(false);
+          console.log('✅ Session initialized with profile');
           return;
         } catch (error) {
-          console.warn('Stored profile parse error, clearing invalid data', error);
+          console.error('❌ Stored profile parse error:', error);
+          console.error('❌ Invalid profile JSON:', storedProfileJson);
           await AsyncStorage.removeItem(PROFILE_STORAGE_KEY);
         }
+      } else {
+        console.log('📭 No stored profile found');
       }
 
       // Profil yoksa bile direkt ana sayfaya git (onboarding yok)
+      console.log('✅ Setting isOnboarded to true (no profile)');
       setIsOnboarded(true);
     } catch (error) {
-      console.error('Session initialization error:', error);
+      console.error('❌ Session initialization error:', error);
+      console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack');
       setIsOnboarded(true); // Hata olsa bile ana sayfaya git
     } finally {
       setIsLoading(false);
+      console.log('✅ Session initialization complete, isLoading = false');
     }
   };
 

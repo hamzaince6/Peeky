@@ -20,7 +20,7 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.peeky.educationalgames',
-      buildNumber: '5',
+      buildNumber: '6',
       icon: './assets/peekylogo.png',
       infoPlist: {
         NSLocalNetworkUsageDescription: 'This app needs access to your local network',
@@ -35,7 +35,7 @@ module.exports = {
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
       package: 'com.peeky.educationalgames',
-      versionCode: '5',
+      versionCode: '6',
       permissions: [
         'android.permission.INTERNET',
         'android.permission.CAMERA',
