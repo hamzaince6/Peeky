@@ -1,0 +1,20 @@
+#!/bin/bash
+# Archive build sırasında kontrol edilecekler
+
+echo "📋 Archive Build Kontrol Listesi:"
+echo ""
+echo "1. ✅ 'Bundle React Native code and images' script'i çalışıyor mu?"
+echo "   → Build log'larında 'Bundle React Native code and images' ara"
+echo "   → Script çalışıyorsa 'export:embed' komutu görünmeli"
+echo ""
+echo "2. ✅ JS bundle embed edildi mi?"
+echo "   → Archive tamamlandıktan sonra şunu çalıştır:"
+echo "   ./scripts/check-bundle.sh ~/Library/Developer/Xcode/Archives/2026-01-29/PeekyEiticiOyunlar.xcarchive"
+echo ""
+echo "3. ✅ Build log'larında hata var mı?"
+echo "   → 'error', 'failed', '❌' gibi kelimeleri ara"
+echo ""
+echo "4. ✅ NODE_BINARY bulundu mu?"
+echo "   → Build log'larında 'NODE_BINARY' ara"
+echo "   → '.xcode.env' dosyası okundu mu kontrol et"
+echo ""
